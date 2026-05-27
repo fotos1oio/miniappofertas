@@ -3,51 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buscador de Ofertas</title>
+    <title>Buscador Premium de Ofertas</title>
+    
+    <!-- Fonte Inter (Design Limpo e Premium) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    
+    <!-- Ícones FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- SDK Oficial do Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
     <style>
         body {
-            background-color: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Fundo cinza bem claro para destacar os cards brancos */
+            color: #111827;
+        }
+        
+        /* Ajuste para o Dark Mode Nativo do Telegram */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: var(--tg-theme-bg-color, #121212);
+                color: var(--tg-theme-text-color, #ffffff);
+            }
+            .premium-card {
+                background-color: #1e1e1e !important;
+                border-color: #2d2d2d !important;
+            }
+            .search-bar {
+                background-color: #1e1e1e !important;
+                color: #fff !important;
+                border-color: #333 !important;
+            }
+        }
+
+        .premium-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
     </style>
 </head>
-<body class="p-4 font-sans">
-    <div class="text-center mb-6">
-        <h1 class="text-2xl font-bold text-[--tg-theme-button-color,#2481cc]">Multi-Busca Afiliados</h1>
-        <p class="text-sm opacity-70">Encontre o menor preço nas maiores plataformas</p>
-    </div>
+<body class="p-4 sm:p-6 max-w-2xl mx-auto">
 
-    <div class="flex gap-2 mb-6">
+    <!-- Cabeçalho Premium -->
+    <header class="mb-6 mt-2">
+        <h1 class="text-2xl font-bold tracking-tight">Comparador <span class="text-blue-600 dark:text-blue-400">PRO</span></h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">O menor preço garantido nos maiores marketplaces.</p>
+    </header>
+
+    <!-- Barra de Busca Avançada -->
+    <div class="relative mb-8 shadow-sm">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <i class="fa-solid fa-magnifying-glass text-gray-400"></i>
+        </div>
         <input 
             type="text" 
             id="search-input" 
-            placeholder="Ex: Hard Wallet Trezor, Ledger..." 
-            class="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[--tg-theme-button-color,#2481cc] bg-[--tg-theme-bg-color] text-[--tg-theme-text-color]"
+            placeholder="Ex: Trezor Model T, Fone JBL..." 
+            class="search-bar block w-full pl-10 pr-24 py-4 rounded-xl border border-gray-200 bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+            onkeypress="if(event.key === 'Enter') buscarProdutos()"
         >
         <button 
             onclick="buscarProdutos()" 
-            class="bg-[--tg-theme-button-color,#2481cc] text-[--tg-theme-button-text-color,#ffffff] px-6 py-3 rounded-lg font-medium hover:opacity-90 active:scale-95 transition"
+            class="absolute inset-y-1.5 right-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-5 py-2 rounded-lg transition-colors shadow-sm"
         >
             Buscar
         </button>
     </div>
 
-    <div id="loading" class="hidden text-center my-8">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[--tg-theme-button-color,#2481cc] mx-auto mb-2"></div>
-        <p class="text-sm opacity-75">Buscando os melhores preços...</p>
+    <!-- Skeleton Loading (Estilo Premium de Carregamento) -->
+    <div id="loading" class="hidden space-y-4">
+        <div class="flex p-4 rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-gray-800">
+            <div class="w-24 h-24 rounded-xl skeleton flex-shrink-0"></div>
+            <div class="ml-4 flex-1 space-y-3 py-1">
+                <div class="h-4 skeleton rounded w-3/4"></div>
+                <div class="h-3 skeleton rounded w-1/2"></div>
+                <div class="h-6 skeleton rounded w-1/3 mt-4"></div>
+            </div>
+        </div>
+        <div class="flex p-4 rounded-2xl bg-white dark:bg-[#1e1e1e] border border-gray-100 dark:border-gray-800">
+            <div class="w-24 h-24 rounded-xl skeleton flex-shrink-0"></div>
+            <div class="ml-4 flex-1 space-y-3 py-1">
+                <div class="h-4 skeleton rounded w-3/4"></div>
+                <div class="h-3 skeleton rounded w-1/2"></div>
+                <div class="h-6 skeleton rounded w-1/3 mt-4"></div>
+            </div>
+        </div>
     </div>
 
-    <div id="results" class="space-y-4"></div>
+    <!-- Lista de Resultados -->
+    <div id="results" class="space-y-4">
+        <!-- Estado Inicial (Vazio) -->
+        <div class="text-center py-10 opacity-60">
+            <i class="fa-solid fa-wallet text-4xl mb-3 text-gray-300 dark:text-gray-600"></i>
+            <p class="text-sm">Digite um produto acima para comparar os preços.</p>
+        </div>
+    </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand(); 
+        tg.expand();
 
         async function buscarProdutos() {
             const query = document.getElementById('search-input').value;
-            if (!query) return alert('Por favor, digite um produto!');
+            if (!query) return;
 
             const resultsContainer = document.getElementById('results');
             const loadingDiv = document.getElementById('loading');
@@ -61,43 +134,75 @@
                 exibirResultados(response);
             } catch (error) {
                 loadingDiv.classList.add('hidden');
-                alert('Erro ao buscar produtos.');
+                resultsContainer.innerHTML = '<p class="text-center text-red-500">Erro ao processar a busca.</p>';
             }
         }
 
         function simularBuscaDoBackend(termo) {
             return new Promise((resolve) => {
                 setTimeout(() => {
+                    // Adicionei URLs de imagens temporárias para deixar o visual impecável
                     const dadosFalsos = [
-                        { plataforma: 'Amazon', produto: `${termo} - No Estoque`, preco: 850.00, link: 'https://amazon.com.br' },
-                        { plataforma: 'Mercado Livre', produto: `${termo} Original`, preco: 839.90, link: 'https://mercadolivre.com.br' },
-                        { plataforma: 'Shopee', produto: `${termo} C/ Desconto`, preco: 799.00, link: 'https://shopee.com.br' },
-                        { plataforma: 'AliExpress', produto: `${termo} Global`, preco: 815.50, link: 'https://aliexpress.com' },
+                        { plataforma: 'Amazon', icone: 'fa-amazon', cor: 'text-orange-500', produto: `${termo} - Geração Mais Recente`, preco: 850.00, precoAntigo: 999.00, link: 'https://amazon.com.br', img: 'https://placehold.co/200x200/ffffff/000000?text=Foto' },
+                        { plataforma: 'Mercado Livre', icone: 'fa-handshake', cor: 'text-yellow-500', produto: `${termo} Lacrado na Caixa`, preco: 839.90, precoAntigo: 890.00, link: 'https://mercadolivre.com.br', img: 'https://placehold.co/200x200/ffffff/000000?text=Foto' },
+                        { plataforma: 'Shopee', icone: 'fa-shop', cor: 'text-orange-600', produto: `${termo} (Loja Oficial)`, preco: 799.00, precoAntigo: 850.00, link: 'https://shopee.com.br', img: 'https://placehold.co/200x200/ffffff/000000?text=Foto' },
+                        { plataforma: 'AliExpress', icone: 'fa-globe', cor: 'text-red-500', produto: `${termo} Global Version`, preco: 815.50, precoAntigo: 920.00, link: 'https://aliexpress.com', img: 'https://placehold.co/200x200/ffffff/000000?text=Foto' },
                     ];
                     dadosFalsos.sort((a, b) => a.preco - b.preco);
                     resolve(dadosFalsos);
-                }, 1500); 
+                }, 1800); // Carregamento um pouco maior para você ver o efeito skeleton
             });
         }
 
         function exibirResultados(produtos) {
             const container = document.getElementById('results');
+            
             produtos.forEach((prod, index) => {
-                const destaqueClasse = index === 0 ? 'border-2 border-green-500 shadow-md' : 'border border-gray-200';
+                const isCampeao = index === 0;
+                
+                // Calcula a porcentagem de desconto
+                const desconto = Math.round(((prod.precoAntigo - prod.preco) / prod.precoAntigo) * 100);
+
                 const card = document.createElement('div');
-                card.className = `p-4 rounded-xl flex justify-between items-center bg-white dark:bg-gray-800 text-black dark:text-white ${destaqueClasse}`;
-                card.innerHTML = `
-                    <div>
-                        <span class="text-xs font-bold uppercase tracking-wide px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-                            ${prod.plataforma}
-                        </span>
-                        <h3 class="font-semibold text-base mt-1 line-clamp-1">${prod.produto}</h3>
-                        <p class="text-lg font-bold text-green-600 mt-1">R$ ${prod.preco.toFixed(2)}</p>
+                card.className = `premium-card relative flex p-3 sm:p-4 rounded-2xl bg-white border ${isCampeao ? 'border-green-500 premium-shadow' : 'border-gray-100 dark:border-[#2d2d2d]'} transition-all hover:shadow-md`;
+                
+                // Fita de "Melhor Opção"
+                const ribbon = isCampeao ? `
+                    <div class="absolute -top-3 left-4 bg-green-500 text-white text-[10px] font-bold uppercase tracking-wider py-1 px-3 rounded-full shadow-sm flex items-center gap-1">
+                        <i class="fa-solid fa-trophy"></i> Melhor Preço
                     </div>
-                    <div>
-                        <a href="${prod.link}" target="_blank" class="block text-center bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-2 rounded-lg text-sm transition">
-                            ${index === 0 ? '🥇 Melhor Preço' : 'Ir p/ Loja'}
-                        </a>
+                ` : '';
+
+                card.innerHTML = `
+                    ${ribbon}
+                    <!-- Imagem do Produto -->
+                    <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden relative ${isCampeao ? 'mt-2' : ''}">
+                        <img src="${prod.img}" alt="${prod.produto}" class="w-full h-full object-cover mix-blend-multiply">
+                        <div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm text-white text-[10px] font-medium py-1 px-2 text-center flex items-center justify-center gap-1">
+                            <i class="fa-brands ${prod.icone} ${prod.cor}"></i> ${prod.plataforma}
+                        </div>
+                    </div>
+
+                    <!-- Detalhes do Produto -->
+                    <div class="ml-4 flex flex-col justify-between flex-1 ${isCampeao ? 'mt-2' : ''}">
+                        <div>
+                            <h3 class="font-semibold text-sm sm:text-base leading-tight line-clamp-2 text-gray-900 dark:text-gray-100">${prod.produto}</h3>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-xs text-gray-400 line-through">R$ ${prod.precoAntigo.toFixed(2)}</span>
+                                <span class="text-xs font-bold text-red-500 bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded">-${desconto}%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-end justify-between mt-2">
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">A partir de</p>
+                                <p class="text-lg sm:text-xl font-extrabold text-green-600 dark:text-green-400 leading-none">R$ ${prod.preco.toFixed(2)}</p>
+                            </div>
+                            
+                            <a href="${prod.link}" target="_blank" class="${isCampeao ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-900 dark:bg-white dark:text-black hover:bg-gray-800'} text-white font-medium text-xs sm:text-sm px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg transition-transform active:scale-95 flex items-center gap-2">
+                                Comprar <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                        </div>
                     </div>
                 `;
                 container.appendChild(card);
