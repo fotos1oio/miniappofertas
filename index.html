@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Ofertas</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+        }
+    </style>
+</head>
+<body class="p-4 font-sans">
+    <div class="text-center mb-6">
+        <h1 class="text-2xl font-bold text-[--tg-theme-button-color,#2481cc]">Multi-Busca Afiliados</h1>
+        <p class="text-sm opacity-70">Encontre o menor preço nas maiores plataformas</p>
+    </div>
+
+    <div class="flex gap-2 mb-6">
+        <input 
+            type="text" 
+            id="search-input" 
+            placeholder="Ex: Hard Wallet Trezor, Ledger..." 
+            class="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[--tg-theme-button-color,#2481cc] bg-[--tg-theme-bg-color] text-[--tg-theme-text-color]"
+        >
+        <button 
+            onclick="buscarProdutos()" 
+            class="bg-[--tg-theme-button-color,#2481cc] text-[--tg-theme-button-text-color,#ffffff] px-6 py-3 rounded-lg font-medium hover:opacity-90 active:scale-95 transition"
+        >
+            Buscar
+        </button>
+    </div>
+
+    <div id="loading" class="hidden text-center my-8">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[--tg-theme-button-color,#2481cc] mx-auto mb-2"></div>
+        <p class="text-sm opacity-75">Buscando os melhores preços...</p>
+    </div>
+
+    <div id="results" class="space-y-4"></div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); 
+
+        async function buscarProdutos() {
+            const query = document.getElementById('search-input').value;
+            if (!query) return alert('Por favor, digite um produto!');
+
+            const resultsContainer = document.getElementById('results');
+            const loadingDiv = document.getElementById('loading');
+
+            resultsContainer.innerHTML = '';
+            loadingDiv.classList.remove('hidden');
+
+            try {
+                const response = await simularBuscaDoBackend(query);
+                loadingDiv.classList.add('hidden');
+                exibirResultados(response);
+            } catch (error) {
+                loadingDiv.classList.add('hidden');
+                alert('Erro ao buscar produtos.');
+            }
+        }
+
+        function simularBuscaDoBackend(termo) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    const dadosFalsos = [
+                        { plataforma: 'Amazon', produto: `${termo} - No Estoque`, preco: 850.00, link: 'https://amazon.com.br' },
+                        { plataforma: 'Mercado Livre', produto: `${termo} Original`, preco: 839.90, link: 'https://mercadolivre.com.br' },
+                        { plataforma: 'Shopee', produto: `${termo} C/ Desconto`, preco: 799.00, link: 'https://shopee.com.br' },
+                        { plataforma: 'AliExpress', produto: `${termo} Global`, preco: 815.50, link: 'https://aliexpress.com' },
+                    ];
+                    dadosFalsos.sort((a, b) => a.preco - b.preco);
+                    resolve(dadosFalsos);
+                }, 1500); 
+            });
+        }
+
+        function exibirResultados(produtos) {
+            const container = document.getElementById('results');
+            produtos.forEach((prod, index) => {
+                const destaqueClasse = index === 0 ? 'border-2 border-green-500 shadow-md' : 'border border-gray-200';
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-xl flex justify-between items-center bg-white dark:bg-gray-800 text-black dark:text-white ${destaqueClasse}`;
+                card.innerHTML = `
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wide px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                            ${prod.plataforma}
+                        </span>
+                        <h3 class="font-semibold text-base mt-1 line-clamp-1">${prod.produto}</h3>
+                        <p class="text-lg font-bold text-green-600 mt-1">R$ ${prod.preco.toFixed(2)}</p>
+                    </div>
+                    <div>
+                        <a href="${prod.link}" target="_blank" class="block text-center bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-2 rounded-lg text-sm transition">
+                            ${index === 0 ? '🥇 Melhor Preço' : 'Ir p/ Loja'}
+                        </a>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
