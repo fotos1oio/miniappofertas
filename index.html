@@ -119,24 +119,36 @@
         tg.expand();
 
         async function buscarProdutos() {
-            const query = document.getElementById('search-input').value;
-            if (!query) return;
+    const query = document.getElementById('search-input').value;
+    if (!query) return;
 
-            const resultsContainer = document.getElementById('results');
-            const loadingDiv = document.getElementById('loading');
+    const resultsContainer = document.getElementById('results');
+    const loadingDiv = document.getElementById('loading');
 
-            resultsContainer.innerHTML = '';
-            loadingDiv.classList.remove('hidden');
+    resultsContainer.innerHTML = '';
+    loadingDiv.classList.remove('hidden');
 
-            try {
-                const response = await simularBuscaDoBackend(query);
-                loadingDiv.classList.add('hidden');
-                exibirResultados(response);
-            } catch (error) {
-                loadingDiv.classList.add('hidden');
-                resultsContainer.innerHTML = '<p class="text-center text-red-500">Erro ao processar a busca.</p>';
-            }
-        }
+    try {
+        const urlDoSeuBackend = 'https://api-buscador-afiliados.keidysonpm.workers.dev';
+        const resposta = await fetch(`${urlDoSeuBackend}?q=${encodeURIComponent(query)}`);
+        
+        if (!resposta.ok) throw new Error('Erro na API');
+        
+        const dados = await resposta.json();
+        
+        loadingDiv.classList.add('hidden');
+        exibirResultados(dados);
+    } catch (error) {
+        loadingDiv.classList.add('hidden');
+        // Agora, se der erro, você verá na tela o que aconteceu
+        resultsContainer.innerHTML = `
+            <div class="text-center p-4">
+                <p class="text-red-500 font-bold">Erro ao buscar:</p>
+                <p class="text-sm text-gray-600">${error.message}</p>
+                <button onclick="buscarProdutos()" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">Tentar Novamente</button>
+            </div>`;
+    }
+}
 
         async function simularBuscaDoBackend(termo) {
             // SUBSTITUA ESTE LINK PELO LINK REAL DO SEU CLOUDFLARE WORKER!
@@ -153,60 +165,53 @@
             }
         }
 
-        function exibirResultados(produtos) {
-            const container = document.getElementById('results');
-            
-            produtos.forEach((prod, index) => {
-                const isCampeao = index === 0;
-                
-                // Calcula a porcentagem de desconto
-                const desconto = Math.round(((prod.precoAntigo - prod.preco) / prod.precoAntigo) * 100);
+function exibirResultados(produtos) {
+    const container = document.getElementById('results');
+    container.innerHTML = ''; // Limpa resultados anteriores
+    
+    if (produtos.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-500">Nenhum produto encontrado.</p>';
+        return;
+    }
+    
+    produtos.forEach((prod, index) => {
+        const isCampeao = index === 0;
+        const desconto = Math.round(((prod.precoAntigo - prod.preco) / prod.precoAntigo) * 100);
 
-                const card = document.createElement('div');
-                card.className = `premium-card relative flex p-3 sm:p-4 rounded-2xl bg-white border ${isCampeao ? 'border-green-500 premium-shadow' : 'border-gray-100 dark:border-[#2d2d2d]'} transition-all hover:shadow-md`;
-                
-                // Fita de "Melhor Opção"
-                const ribbon = isCampeao ? `
-                    <div class="absolute -top-3 left-4 bg-green-500 text-white text-[10px] font-bold uppercase tracking-wider py-1 px-3 rounded-full shadow-sm flex items-center gap-1">
-                        <i class="fa-solid fa-trophy"></i> Melhor Preço
-                    </div>
-                ` : '';
+        const card = document.createElement('div');
+        card.className = `premium-card relative flex p-3 sm:p-4 rounded-2xl bg-white border ${isCampeao ? 'border-green-500 premium-shadow' : 'border-gray-100'} transition-all`;
+        
+        card.innerHTML = `
+            ${isCampeao ? '<div class="absolute -top-3 left-4 bg-green-500 text-white text-[10px] font-bold py-1 px-3 rounded-full">Melhor Preço</div>' : ''}
+            <div class="w-24 h-24 rounded-xl bg-gray-100 overflow-hidden relative flex-shrink-0">
+                <img src="${prod.img}" alt="${prod.produto}" class="w-full h-full object-cover">
+            </div>
+            <div class="ml-4 flex flex-col justify-between flex-1">
+                <h3 class="font-semibold text-sm line-clamp-2">${prod.produto}</h3>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-400 line-through">R$ ${prod.precoAntigo.toFixed(2)}</span>
+                    <span class="text-xs font-bold text-red-500">-${desconto}%</span>
+                </div>
+                <div class="flex items-end justify-between mt-2">
+                    <p class="text-lg font-extrabold text-green-600">R$ ${prod.preco.toFixed(2)}</p>
+                    <button onclick="abrirLink('${prod.link}')" class="bg-gray-900 text-white text-xs px-4 py-2 rounded-lg">
+                        Comprar
+                    </button>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
 
-                card.innerHTML = `
-                    ${ribbon}
-                    <!-- Imagem do Produto -->
-                    <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden relative ${isCampeao ? 'mt-2' : ''}">
-                        <img src="${prod.img}" alt="${prod.produto}" class="w-full h-full object-cover mix-blend-multiply">
-                        <div class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm text-white text-[10px] font-medium py-1 px-2 text-center flex items-center justify-center gap-1">
-                            <i class="fa-brands ${prod.icone} ${prod.cor}"></i> ${prod.plataforma}
-                        </div>
-                    </div>
-
-                    <!-- Detalhes do Produto -->
-                    <div class="ml-4 flex flex-col justify-between flex-1 ${isCampeao ? 'mt-2' : ''}">
-                        <div>
-                            <h3 class="font-semibold text-sm sm:text-base leading-tight line-clamp-2 text-gray-900 dark:text-gray-100">${prod.produto}</h3>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-xs text-gray-400 line-through">R$ ${prod.precoAntigo.toFixed(2)}</span>
-                                <span class="text-xs font-bold text-red-500 bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded">-${desconto}%</span>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-end justify-between mt-2">
-                            <div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">A partir de</p>
-                                <p class="text-lg sm:text-xl font-extrabold text-green-600 dark:text-green-400 leading-none">R$ ${prod.preco.toFixed(2)}</p>
-                            </div>
-                            
-                            <a href="${prod.link}" target="_blank" class="${isCampeao ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-900 dark:bg-white dark:text-black hover:bg-gray-800'} text-white font-medium text-xs sm:text-sm px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg transition-transform active:scale-95 flex items-center gap-2">
-                                Comprar <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                            </a>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
+// Função especial para abrir links no Telegram
+function abrirLink(url) {
+    if (window.Telegram.WebApp) {
+        window.Telegram.WebApp.openLink(url);
+    } else {
+        window.open(url, '_blank');
+    }
+}
     </script>
 </body>
 </html>
