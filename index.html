@@ -129,23 +129,34 @@
     loadingDiv.classList.remove('hidden');
 
     try {
-        const urlDoSeuBackend = 'https://api-buscador-afiliados.keidysonpm.workers.dev';
-        const resposta = await fetch(`${urlDoSeuBackend}?q=${encodeURIComponent(query)}`);
+        const urlDoSeuBackend = 'https://api-buscador-afiliados.keidysonpm.workers.dev/';
         
-        if (!resposta.ok) throw new Error('Erro na API');
+        // Requisição otimizada para navegadores restritivos
+        const resposta = await fetch(`${urlDoSeuBackend}?q=${encodeURIComponent(query)}`, {
+            method: 'GET',
+            mode: 'cors', // Define explicitamente o modo CORS
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!resposta.ok) {
+            throw new Error(`Servidor respondeu com status: ${resposta.status}`);
+        }
         
         const dados = await resposta.json();
         
         loadingDiv.classList.add('hidden');
         exibirResultados(dados);
+        
     } catch (error) {
         loadingDiv.classList.add('hidden');
-        // Agora, se der erro, você verá na tela o que aconteceu
+        console.error("Erro detalhado:", error); // Isso aparece no console do navegador
         resultsContainer.innerHTML = `
-            <div class="text-center p-4">
-                <p class="text-red-500 font-bold">Erro ao buscar:</p>
-                <p class="text-sm text-gray-600">${error.message}</p>
-                <button onclick="buscarProdutos()" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">Tentar Novamente</button>
+            <div class="text-center p-6 bg-red-50 dark:bg-red-900/20 rounded-xl">
+                <p class="text-red-500 font-bold mb-2">Ops! Falha na conexão.</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Verifique se o servidor está ativo.</p>
+                <button onclick="buscarProdutos()" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg font-medium">Tentar Novamente</button>
             </div>`;
     }
 }
